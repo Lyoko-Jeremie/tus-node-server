@@ -14,7 +14,8 @@
     "protocol",
     "app",
     "api",
-    "server"
+    "server",
+    "typescrypt"
   ],
   "author": "Ben Stahl <bhstahl@gmail.com>",
   "license": "MIT",
@@ -28,24 +29,21 @@
   "files": [
     "LICENSE",
     "README.md",
-    "index.js",
-    "lib/"
+    "js/"
   ],
-  "main": "index.js",
+  "main": "js/index.js",
+  "typings": "js/index",
   "scripts": {
     "test": "cross-env NODE_ENV=test mocha --timeout 5000",
     "coverage": "nyc npm test && nyc report --reporter=text-lcov | coveralls",
     "demo": "node demo/server.js",
     "gcs_demo": "cross-env DATA_STORE=GCSDataStore node demo/server.js",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "build:ts": "npx tsc ./ts"
   },
   "devDependencies": {
-    "@vimeo/eslint-config-player": "^5.0.1",
-    "babel-eslint": "^10.0.1",
     "coveralls": "^3.0.3",
     "cross-env": "^5.2.0",
-    "eslint": "^5.15.1",
-    "eslint-plugin-promise": "^4.0.1",
     "istanbul": "^0.4.5",
     "mocha": "^6.0.2",
     "node-mocks-http": "^1.7.3",
