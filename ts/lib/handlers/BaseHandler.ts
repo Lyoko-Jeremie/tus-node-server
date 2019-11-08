@@ -44,7 +44,7 @@ export class BaseHandler extends EventEmitter {
      * @param  {object} req http.incomingMessage
      * @return {boolean|string}
      */
-    getFileIdFromRequest(req: IncomingHttpHeaders & IncomingMessage): boolean | string {
+    getFileIdFromRequest(req: IncomingHttpHeaders & IncomingMessage): undefined | string {
         const re = new RegExp(`${req.baseUrl || ''}${this.store.path}\\/(\\S+)\\/?`); // eslint-disable-line prefer-template
         let url = (req.originalUrl || req.url);
         if (url instanceof Array) {
@@ -52,7 +52,7 @@ export class BaseHandler extends EventEmitter {
         }
         const match = url.match(re);
         if (!match) {
-            return false;
+            return undefined;
         }
 
         const file_id = match[1];

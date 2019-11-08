@@ -15,7 +15,7 @@ export class PatchHandler extends BaseHandler {
      */
     send(req, res) {
         const file_id = this.getFileIdFromRequest(req);
-        if (file_id === false) {
+        if (file_id === undefined) {
             return super.send(req, res, ERRORS.FILE_NOT_FOUND.status_code, {}, ERRORS.FILE_NOT_FOUND.body);
         }
 

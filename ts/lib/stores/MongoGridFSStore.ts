@@ -1,6 +1,6 @@
 import {DataStore} from './DataStore';
 import {File} from '../models/File';
-import mongodb from 'mongodb';
+import mongodb, {MongoClient} from 'mongodb';
 import chunkingStreams from 'chunking-streams';
 import SparkMD5 from 'spark-md5';
 import {ERRORS, EVENTS, TUS_RESUMABLE} from '../constants';
@@ -32,6 +32,7 @@ export class MongoGridFSStore extends DataStore {
      * @param {object} options An object containing all of the options for the store
      * @param {string} options.uri The URI for the Mongo database. Must be in the form of mongodb://localhost/database_name
      * @param {string} options.bucket The name of the bucket to store the files in under Mongo. Mongo GridFS creates two collections from your bucket name.
+     * @param {string} options.db The name of the db to store the files in under Mongo.
      * @param {number} options.chunk_size The chunk size, in bytes, for the files in MongoDB. Defaults to 64kb
      */
     constructor(options) {
@@ -41,13 +42,18 @@ export class MongoGridFSStore extends DataStore {
         if (!options.uri) {
             throw new Error('MongoGridFSStore must be provided with the URI for the Mongo database!');
         }
+        if (!options.db) {
+            throw new Error('MongoGridFSStore must be provided with a db name to store the files in within Mongo!');
+        }
         if (!options.bucket) {
             throw new Error('MongoGridFSStore must be provided with a bucket name to store the files in within Mongo!');
         }
         this.bucket_name = options.bucket;
         this.chunk_size = options.chunk_size || (1024 * 64);
 
-        this.db = mongodb.MongoClient.connect(options.uri).then((db) => {
+        this.db = MongoClient.connect(options.uri).then((mc: MongoClient) => {
+            return mc.db(options.db);
+        }).then((db) => {
             const chunks = db.collection(`${this.bucket_name}.chunks`);
             const files = db.collection(`${this.bucket_name}.files`);
 

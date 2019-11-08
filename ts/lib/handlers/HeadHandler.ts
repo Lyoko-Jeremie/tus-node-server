@@ -15,7 +15,7 @@ export class HeadHandler extends BaseHandler {
      */
     send(req: IncomingHttpHeaders & IncomingMessage, res: ServerResponse): Promise<ServerResponse> {
         const file_id = this.getFileIdFromRequest(req);
-        if (file_id === false) {
+        if (file_id === undefined) {
             return super.send(req, res, ERRORS.FILE_NOT_FOUND.status_code, {}, ERRORS.FILE_NOT_FOUND.body);
         }
 
