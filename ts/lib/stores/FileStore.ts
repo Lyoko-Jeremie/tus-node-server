@@ -4,6 +4,7 @@ import * as fs from 'fs' ;
 import * as ConfigStore from 'configstore';
 import {ERRORS, EVENTS} from '../constants';
 import * as debug from 'debug';
+import {PipListener, PipListenerConfig, PipListenerObservData} from "../tools/PipListener";
 
 const pkg = require('../../../package.json');
 const MASK = '0777';
@@ -11,7 +12,7 @@ const IGNORED_MKDIR_ERROR = 'EEXIST';
 const FILE_DOESNT_EXIST = 'ENOENT';
 const log = debug('tus-node-server:stores:filestore');
 
-export type FileStoreOptType = { directory?: string } & DataStoreOptType;
+export type FileStoreOptType = { directory?: string, pipListenerConfig?: PipListenerConfig } & DataStoreOptType;
 
 /**
  * @fileOverview
@@ -23,11 +24,13 @@ export class FileStore extends DataStore {
     directory;
     configStore: ConfigStore;
     file;
+    pipListenerConfig?: PipListenerConfig;
 
     constructor(options: FileStoreOptType) {
         super(options);
 
         this.directory = options.directory || options.path.replace(/^\//, '');
+        this.pipListenerConfig = options.pipListenerConfig;
 
         this.extensions = ['creation', 'creation-defer-length'];
         this.configStore = new ConfigStore(`${pkg.name}-${pkg.version}`);
@@ -120,32 +123,59 @@ export class FileStore extends DataStore {
                 reject(ERRORS.FILE_WRITE_ERROR);
             });
 
-            return req.pipe(stream).on('finish', () => {
-                log(`[FileStore] write: ${new_offset} bytes written to ${path}`);
-                offset += new_offset;
-                log(`[FileStore] write: File is now ${offset} bytes`);
-
+            const config = this.configStore.get(file_id);
+            this.file.size = {
+                bytes: this.file.size.bytes || parseInt(config.upload_length, 10),
+                chunks: this.file.size.chunks || Math.ceil(parseInt(config.upload_length, 10) / offset),
+            };
+            const pl = new PipListener(this.file.size.bytes, offset, this.pipListenerConfig);
+            pl.asObservable().subscribe((event: PipListenerObservData) => {
                 const config = this.configStore.get(file_id);
-
                 this.file.size = {
                     bytes: this.file.size.bytes || parseInt(config.upload_length, 10),
                     chunks: this.file.size.chunks || Math.ceil(parseInt(config.upload_length, 10) / offset),
                 };
-
                 const uploadCompleted = parseInt(config.upload_length, 10) === offset;
                 this.emit(EVENTS.EVENT_CHUNK_UPLOADED, {
                     file: config,
-                    loaded: {
-                        bytes: offset,
-                        chunks: uploadCompleted ? this.file.size.chunks : offset / new_offset,
-                    },
+                    // loaded: {
+                    //     bytes: offset,
+                    //     chunks: uploadCompleted ? this.file.size.chunks : offset / new_offset,
+                    // },
+                    progress: event,
                     total: this.file.size,
                 });
-                if (config && uploadCompleted) {
-                    this.emit(EVENTS.EVENT_UPLOAD_COMPLETE, {file: config});
-                }
-                resolve(offset);
             });
+
+            return req
+                .pipe(pl)
+                .pipe(stream)
+                .on('finish', () => {
+                    log(`[FileStore] write: ${new_offset} bytes written to ${path}`);
+                    offset += new_offset;
+                    log(`[FileStore] write: File is now ${offset} bytes`);
+
+                    const config = this.configStore.get(file_id);
+
+                    this.file.size = {
+                        bytes: this.file.size.bytes || parseInt(config.upload_length, 10),
+                        chunks: this.file.size.chunks || Math.ceil(parseInt(config.upload_length, 10) / offset),
+                    };
+
+                    const uploadCompleted = parseInt(config.upload_length, 10) === offset;
+                    this.emit(EVENTS.EVENT_CHUNK_UPLOADED, {
+                        file: config,
+                        loaded: {
+                            bytes: offset,
+                            chunks: uploadCompleted ? this.file.size.chunks : offset / new_offset,
+                        },
+                        total: this.file.size,
+                    });
+                    if (config && uploadCompleted) {
+                        this.emit(EVENTS.EVENT_UPLOAD_COMPLETE, {file: config});
+                    }
+                    resolve(offset);
+                });
         });
     }
 
