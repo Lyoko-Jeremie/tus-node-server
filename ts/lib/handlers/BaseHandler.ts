@@ -1,6 +1,6 @@
 import {ServerResponse, OutgoingHttpHeaders, IncomingHttpHeaders, IncomingMessage} from 'http';
-import {DataStore} from '../stores/DataStore' ;
-import EventEmitter from 'events' ;
+import {DataStore} from '../stores/DataStore';
+import {EventEmitter} from 'events';
 
 export class BaseHandler extends EventEmitter {
     store: DataStore;

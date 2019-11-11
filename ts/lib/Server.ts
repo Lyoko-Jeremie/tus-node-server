@@ -5,7 +5,7 @@
  * @author Ben Stahl <bhstahl@gmail.com>
  */
 import http from 'http';
-import EventEmitter from 'events';
+import {EventEmitter} from 'events';
 
 import {DataStore} from './stores/DataStore';
 import {HeadHandler} from './handlers/HeadHandler';
