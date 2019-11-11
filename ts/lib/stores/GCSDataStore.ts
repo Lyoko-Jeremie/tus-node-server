@@ -1,4 +1,4 @@
-import {DataStore} from './DataStore' ;
+import {DataStore, DataStoreOptType} from './DataStore' ;
 import {File} from '../models/File' ;
 import {Bucket, Storage} from '@google-cloud/storage' ;
 import stream from 'stream' ;
@@ -10,6 +10,10 @@ const DEFAULT_CONFIG = {
 };
 const debug = require('debug');
 const log = debug('tus-node-server:stores:gcsstore');
+
+export type GCSDataStoreOptType =
+    { directory?: string, bucket: string, projectId: string, keyFilename: string }
+    & DataStoreOptType;
 
 /**
  * @fileOverview
@@ -23,7 +27,7 @@ export class GCSDataStore extends DataStore {
     bucket: Bucket;
     authConfig: object;
 
-    constructor(options) {
+    constructor(options: GCSDataStoreOptType) {
         super(options);
         this.extensions = ['creation', 'creation-defer-length'];
 

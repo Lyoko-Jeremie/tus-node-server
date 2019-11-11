@@ -1,4 +1,4 @@
-import {DataStore} from './DataStore' ;
+import {DataStore, DataStoreOptType} from './DataStore' ;
 import {File} from '../models/File' ;
 import fs from 'fs' ;
 import ConfigStore from 'configstore' ;
@@ -11,6 +11,8 @@ const IGNORED_MKDIR_ERROR = 'EEXIST';
 const FILE_DOESNT_EXIST = 'ENOENT';
 const log = debug('tus-node-server:stores:filestore');
 
+export type FileStoreOptType = { directory?: string } & DataStoreOptType;
+
 /**
  * @fileOverview
  * Store using local filesystem.
@@ -22,7 +24,7 @@ export class FileStore extends DataStore {
     configstore;
     file;
 
-    constructor(options) {
+    constructor(options: FileStoreOptType) {
         super(options);
 
         this.directory = options.directory || options.path.replace(/^\//, '');

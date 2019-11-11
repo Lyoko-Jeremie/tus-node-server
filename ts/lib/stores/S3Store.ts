@@ -1,6 +1,6 @@
 import assert from 'assert';
 import {File} from '../models/File';
-import {DataStore} from './DataStore';
+import {DataStore, DataStoreOptType} from './DataStore';
 import aws from 'aws-sdk';
 import {ERRORS, EVENTS} from '../constants';
 import {TUS_RESUMABLE} from '../constants';
@@ -53,6 +53,11 @@ const log = debug('tus-node-server:stores:s3store');
 // For each incoming PATCH request (a call to `write`), a new part is uploaded
 // to S3.
 
+export type S3StoreOptType =
+    { accessKeyId: string, secretAccessKey: string, bucket: string, tmpDirPrefix?: string, partSize?: number }
+    & DataStoreOptType
+    & aws.S3.Types.ClientConfiguration;
+
 export class S3Store extends DataStore {
     tmp_dir_prefix;
     bucket_name;
@@ -60,7 +65,7 @@ export class S3Store extends DataStore {
     cache: object;
     client: aws.S3;
 
-    constructor(options) {
+    constructor(options: S3StoreOptType) {
         super(options);
 
         this.extensions = ['creation', 'creation-defer-length'];

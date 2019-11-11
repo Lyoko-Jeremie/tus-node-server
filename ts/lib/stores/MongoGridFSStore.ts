@@ -1,6 +1,6 @@
-import {DataStore} from './DataStore';
+import {DataStore, DataStoreOptType} from './DataStore';
 import {File} from '../models/File';
-import mongodb, {MongoClient} from 'mongodb';
+import mongodb, {MongoClient, Db} from 'mongodb';
 import chunkingStreams from 'chunking-streams';
 import SparkMD5 from 'spark-md5';
 import {ERRORS, EVENTS, TUS_RESUMABLE} from '../constants';
@@ -9,6 +9,9 @@ const DEFAULT_CONFIG = {
     scopes: ['https://www.googleapis.com/auth/devstorage.full_control'],
 };
 
+export type MongoGridFSStoreOptType =
+    { uri: string, db: string, bucket: string, chunk_size?: number }
+    & DataStoreOptType;
 
 /**
  * @fileOverview
@@ -21,10 +24,9 @@ const DEFAULT_CONFIG = {
  * @author Bradley Arsenault <brad@electricbrain.io>
  */
 export class MongoGridFSStore extends DataStore {
-
-    bucket_name;
-    chunk_size;
-    db;
+    bucket_name: string;
+    chunk_size: number;
+    db: Promise<Db>;
 
     /**
      * Construct the MongoGridFSStore.
@@ -35,7 +37,7 @@ export class MongoGridFSStore extends DataStore {
      * @param {string} options.db The name of the db to store the files in under Mongo.
      * @param {number} options.chunk_size The chunk size, in bytes, for the files in MongoDB. Defaults to 64kb
      */
-    constructor(options) {
+    constructor(options: MongoGridFSStoreOptType) {
         super(options);
         this.extensions = ['creation', 'creation-defer-length'];
 

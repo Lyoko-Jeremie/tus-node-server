@@ -13,13 +13,15 @@ import debug from 'debug' ;
 
 const log = debug('tus-node-server:stores');
 
+export type DataStoreOptType = { path: string, namingFunction?: Function, relativeLocation?: boolean };
+
 export class DataStore extends EventEmitter {
     path: string;
     generateFileName;
     relativeLocation;
     _extensions;
 
-    constructor(options) {
+    constructor(options: DataStoreOptType) {
         super();
         if (!options || !options.path) {
             throw new Error('Store must have a path');
