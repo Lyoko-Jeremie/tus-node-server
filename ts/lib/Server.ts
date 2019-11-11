@@ -20,7 +20,18 @@ const log = debug('tus-node-server');
 
 export class TusServer extends EventEmitter {
 
-    handlers;
+    handlers: {
+        // GET handlers should be written in the implementations
+        // eg.
+        //      const server = new tus.Server();
+        //      server.get('/', (req, res) => { ... });
+        GET: {},
+        // These methods are handled under the tus protocol
+        HEAD: HeadHandler,
+        OPTIONS: OptionsHandler,
+        PATCH: PatchHandler,
+        POST: PostHandler,
+    };
     _datastore: DataStore;
 
     constructor() {
@@ -29,7 +40,7 @@ export class TusServer extends EventEmitter {
         // Any handlers assigned to this object with the method as the key
         // will be used to repond to those requests. They get set/re-set
         // when a datastore is assigned to the server.
-        this.handlers = {};
+        this.handlers = {} as any;
 
         // Remove any event listeners from each handler as they are removed
         // from the server. This must come before adding a 'newListener' listener,
@@ -109,7 +120,7 @@ export class TusServer extends EventEmitter {
      * @return {ServerResponse}
      */
     handle(req, res) {
-        log(`[TusServer] handle: ${req.method} ${req.url}`);
+        log(`[TusServer] handle: ${req.method} ${req.url} ,headers: ${JSON.stringify(req.headers)}`);
 
         // Allow overriding the HTTP method. The reason for this is
         // that some libraries/environments to not support PATCH and

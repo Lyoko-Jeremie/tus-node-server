@@ -18,6 +18,12 @@ export class PostHandler extends BaseHandler {
             .then((File) => {
                 const url = this.store.relativeLocation ? `${req.baseUrl || ''}${this.store.path}/${File.id}` : `//${req.headers.host}${req.baseUrl || ''}${this.store.path}/${File.id}`;
 
+                log(`url: ${url}`);
+                log(`req.baseUrl: ${req.baseUrl}`);
+                log(`this.store.path: ${this.store.path}`);
+                log(`File.id: ${File.id}`);
+                log(`req.headers: ${JSON.stringify(req.headers)}`);
+
                 this.emit(EVENT_ENDPOINT_CREATED, {url});
                 return super.send(req, res, 201, {Location: url});
             })

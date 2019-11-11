@@ -1,6 +1,9 @@
 import {ServerResponse, OutgoingHttpHeaders, IncomingHttpHeaders, IncomingMessage} from 'http';
 import {DataStore} from '../stores/DataStore';
 import {EventEmitter} from 'events';
+import * as debug from 'debug' ;
+
+const log = debug('tus-node-server:handlers:base');
 
 export class BaseHandler extends EventEmitter {
     store: DataStore;
@@ -30,8 +33,13 @@ export class BaseHandler extends EventEmitter {
             'Content-Length': body.length,
         });
 
-        res.writeHead(status, undefined, headers);
+        log(`status:${status}`);
+        log(`headers:${JSON.stringify(headers)}`);
+
+        res.writeHead(status, headers);
         res.write(body);
+
+        log(`headers send:${JSON.stringify(res.getHeaders())}`);
 
         // return res.end();
         res.end();
