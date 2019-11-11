@@ -51,7 +51,7 @@ describe('FileStore', () => {
             }
 
             // clear the config
-            server.datastore.configstore.clear();
+            server.datastore.configStore.clear();
             return done();
         });
     });
