@@ -5,7 +5,7 @@
  * @author Ben Stahl <bhstahl@gmail.com>
  */
 
-import crypto from 'crypto' ;
+import * as crypto from 'crypto' ;
 
 export class Uid {
     static rand() {

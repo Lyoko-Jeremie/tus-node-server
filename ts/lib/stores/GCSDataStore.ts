@@ -1,14 +1,15 @@
 import {DataStore, DataStoreOptType} from './DataStore' ;
 import {File} from '../models/File' ;
 import {Bucket, Storage} from '@google-cloud/storage' ;
-import stream from 'stream' ;
+import * as stream from 'stream' ;
 import {ERRORS, EVENTS} from '../constants' ;
 import {TUS_RESUMABLE} from '../constants';
 
 const DEFAULT_CONFIG = {
     scopes: ['https://www.googleapis.com/auth/devstorage.full_control'],
 };
-const debug = require('debug');
+import * as debug from 'debug';
+
 const log = debug('tus-node-server:stores:gcsstore');
 
 export type GCSDataStoreOptType =

@@ -9,7 +9,7 @@ import {Uid} from '../models/Uid';
 import {File} from '../models/File';
 import {EventEmitter} from 'events';
 import {ERRORS, EVENTS} from '../constants';
-import debug from 'debug';
+import * as debug from 'debug';
 
 const log = debug('tus-node-server:stores');
 

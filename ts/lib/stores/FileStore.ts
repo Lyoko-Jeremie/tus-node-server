@@ -1,9 +1,9 @@
-import {DataStore, DataStoreOptType} from './DataStore' ;
-import {File} from '../models/File' ;
-import fs from 'fs' ;
-import ConfigStore from 'configstore' ;
+import {DataStore, DataStoreOptType} from './DataStore';
+import {File} from '../models/File';
+import * as fs from 'fs' ;
+import * as ConfigStore from 'configstore';
 import {ERRORS, EVENTS} from '../constants';
-import debug from 'debug';
+import * as debug from 'debug';
 
 const pkg = require('../../../package.json');
 const MASK = '0777';
@@ -21,7 +21,7 @@ export type FileStoreOptType = { directory?: string } & DataStoreOptType;
  */
 export class FileStore extends DataStore {
     directory;
-    configstore;
+    configStore: ConfigStore;
     file;
 
     constructor(options: FileStoreOptType) {
@@ -30,7 +30,7 @@ export class FileStore extends DataStore {
         this.directory = options.directory || options.path.replace(/^\//, '');
 
         this.extensions = ['creation', 'creation-defer-length'];
-        this.configstore = new ConfigStore(`${pkg.name}-${pkg.version}`);
+        this.configStore = new ConfigStore(`${pkg.name}-${pkg.version}`);
         this._checkOrCreateDirectory();
         this.file = {
             size: {
@@ -80,7 +80,7 @@ export class FileStore extends DataStore {
         const fh = await fs.promises.open(`${this.directory}/${file.id}`, 'w')
 
         try {
-            this.configstore.set(file.id, file);
+            this.configStore.set(file.id, file);
 
             await fh.close();
 
@@ -125,7 +125,7 @@ export class FileStore extends DataStore {
                 offset += new_offset;
                 log(`[FileStore] write: File is now ${offset} bytes`);
 
-                const config = this.configstore.get(file_id);
+                const config = this.configStore.get(file_id);
 
                 this.file.size = {
                     bytes: this.file.size.bytes || parseInt(config.upload_length, 10),
@@ -156,7 +156,7 @@ export class FileStore extends DataStore {
      * @return {object}           fs stats
      */
     async getOffset(file_id): Promise<{ [key: string]: number }> {
-        const config = this.configstore.get(file_id);
+        const config = this.configStore.get(file_id);
         const file_path = `${this.directory}/${file_id}`;
 
         return (new Promise((resolve, reject) => {

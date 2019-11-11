@@ -4,7 +4,7 @@
  *
  * @author Ben Stahl <bhstahl@gmail.com>
  */
-import http from 'http';
+import * as http from 'http';
 import {EventEmitter} from 'events';
 
 import {DataStore} from './stores/DataStore';
@@ -14,7 +14,7 @@ import {PatchHandler} from './handlers/PatchHandler';
 import {PostHandler} from './handlers/PostHandler';
 import {RequestValidator} from './validators/RequestValidator';
 import {EXPOSED_HEADERS, REQUEST_METHODS, TUS_RESUMABLE} from './constants';
-import * as  debug from 'debug';
+import * as debug from 'debug';
 
 const log = debug('tus-node-server');
 

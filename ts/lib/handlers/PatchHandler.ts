@@ -1,7 +1,7 @@
 import {ServerResponse, OutgoingHttpHeaders, IncomingHttpHeaders, IncomingMessage} from 'http';
 import {BaseHandler} from './BaseHandler';
 import {ERRORS} from '../constants';
-import debug from 'debug';
+import * as debug from 'debug';
 
 const log = debug('tus-node-server:handlers:patch');
 

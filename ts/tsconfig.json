@@ -6,7 +6,7 @@
     "declaration": true,
     "noLib": false,
     "outDir": "../js",
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": false
   },
   "filesGlob": [
     "./**/*.ts",

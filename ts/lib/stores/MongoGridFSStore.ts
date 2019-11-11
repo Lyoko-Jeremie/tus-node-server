@@ -1,8 +1,9 @@
 import {DataStore, DataStoreOptType} from './DataStore';
 import {File} from '../models/File';
-import mongodb, {MongoClient, Db} from 'mongodb';
-import chunkingStreams from 'chunking-streams';
-import SparkMD5 from 'spark-md5';
+import * as mongodb from 'mongodb';
+import {MongoClient, Db} from 'mongodb';
+import * as chunkingStreams from 'chunking-streams';
+import * as SparkMD5 from 'spark-md5';
 import {ERRORS, EVENTS, TUS_RESUMABLE} from '../constants';
 
 const DEFAULT_CONFIG = {

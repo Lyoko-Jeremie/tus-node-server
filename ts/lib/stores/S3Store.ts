@@ -1,11 +1,11 @@
-import assert from 'assert';
+import * as assert from 'assert';
 import {File} from '../models/File';
 import {DataStore, DataStoreOptType} from './DataStore';
-import aws from 'aws-sdk';
+import * as aws from 'aws-sdk';
 import {ERRORS, EVENTS} from '../constants';
 import {TUS_RESUMABLE} from '../constants';
 
-import debug from 'debug';
+import * as debug from 'debug';
 
 const log = debug('tus-node-server:stores:s3store');
 

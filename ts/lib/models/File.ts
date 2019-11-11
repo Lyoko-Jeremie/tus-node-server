@@ -1,5 +1,3 @@
-'use strict';
-
 /**
  * @fileOverview
  * Model for File objects.
