@@ -2,16 +2,17 @@ import {DataStore, DataStoreOptType} from './DataStore';
 import {File} from '../models/File';
 import * as mongodb from 'mongodb';
 import {MongoClient, Db} from 'mongodb';
-import * as chunkingStreams from 'chunking-streams';
+// import * as chunkingStreams from 'chunking-streams';
 import * as SparkMD5 from 'spark-md5';
 import {ERRORS, EVENTS, TUS_RESUMABLE} from '../constants';
+import {PipListener, PipListenerConfig, PipListenerObservData} from "../tools/PipListener";
+import {SizeChunker} from '../tools/SizeChunker';
+import * as debug from 'debug';
 
-const DEFAULT_CONFIG = {
-    scopes: ['https://www.googleapis.com/auth/devstorage.full_control'],
-};
+const log = debug('tus-node-server:stores:MongoGridFSStore');
 
 export type MongoGridFSStoreOptType =
-    { uri: string, db: string, bucket: string, chunk_size?: number }
+    { uri: string, db: string, bucket: string, chunk_size?: number, pipListenerConfig?: PipListenerConfig }
     & DataStoreOptType;
 
 /**
@@ -28,6 +29,7 @@ export class MongoGridFSStore extends DataStore {
     bucket_name: string;
     chunk_size: number;
     db: Promise<Db>;
+    pipListenerConfig?: PipListenerConfig;
 
     /**
      * Construct the MongoGridFSStore.
@@ -53,8 +55,20 @@ export class MongoGridFSStore extends DataStore {
         }
         this.bucket_name = options.bucket;
         this.chunk_size = options.chunk_size || (1024 * 64);
+        this.pipListenerConfig = Object.assign({
+            chunkSizeCounter: (chunk: any) => {
+                if (chunk && chunk.data) {
+                    return (chunk.data as ArrayBuffer).byteLength;
+                }
+                return (chunk as ArrayBuffer).byteLength;
+            },
+            isObjectMode: true,
+        } as PipListenerConfig, options.pipListenerConfig || {});
 
-        this.db = MongoClient.connect(options.uri).then((mc: MongoClient) => {
+        this.db = MongoClient.connect(options.uri, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+        }).then((mc: MongoClient) => {
             return mc.db(options.db);
         }).then((db) => {
             const chunks = db.collection(`${this.bucket_name}.chunks`);
@@ -104,6 +118,7 @@ export class MongoGridFSStore extends DataStore {
                         upload_metadata,
                         upload_defer_length,
                         md5state: md5.getState(),
+                        fileInfo: file,
                     },
                 };
 
@@ -139,6 +154,22 @@ export class MongoGridFSStore extends DataStore {
                         return reject(ERRORS.FILE_NOT_FOUND);
                     }
 
+                    // prepare progress
+                    const fileInfo: File = fileData.metadata.fileInfo;
+                    const pipListener = new PipListener(
+                        parseInt(fileInfo.upload_length, 10),
+                        offset,
+                        this.pipListenerConfig,
+                    );
+
+                    pipListener.asObservable().subscribe((event: PipListenerObservData) => {
+                        this.emit(EVENTS.EVENT_CHUNK_UPLOADED, {
+                            file: fileInfo,
+                            progress: event,
+                            // total: this.file.size,
+                        });
+                    });
+
                     // If the offset is above 0, then we fetch that chunk
                     // to use as a starting point. Otherwise we create a
                     // brand new chunk.
@@ -156,7 +187,11 @@ export class MongoGridFSStore extends DataStore {
                     md5.setState(fileData.metadata.md5state);
                     let fileSize = startingChunkIndex * this.chunk_size;
                     startingChunkPromise.then((startingChunk) => {
-                        const chunker = new chunkingStreams.SizeChunker({
+                        // const chunker = new chunkingStreams.SizeChunker({
+                        //     chunkSize: this.chunk_size,
+                        //     flushTail: true,
+                        // });
+                        const chunker = new SizeChunker({
                             chunkSize: this.chunk_size,
                             flushTail: true,
                         });
@@ -168,7 +203,8 @@ export class MongoGridFSStore extends DataStore {
                         });
 
                         chunker.on('chunkEnd', (id, callback) => {
-                            chunks.updateOne({
+                            // log(`chunkEnd n:${startingChunkIndex + id}`);
+                            chunks.replaceOne({
                                 files_id: new mongodb.ObjectID(file_id),
                                 n: startingChunkIndex + id,
                             }, {
@@ -176,23 +212,29 @@ export class MongoGridFSStore extends DataStore {
                                 n: startingChunkIndex + id,
                                 data: buffer,
                             }, {upsert: true}).then((result) => {
+                                // log(`chunkEnd insert chunk result:${JSON.stringify(result)}`);
                                 fileSize += buffer.length;
                                 fileData.length = fileSize;
                                 fileData.md5 = md5.end();
                                 fileData.metadata.md5state = md5.getState();
-                                files.updateOne({
+                                files.replaceOne({
                                     _id: new mongodb.ObjectID(file_id),
                                 }, fileData).then((result) => {
+                                    // log(`chunkEnd update fileData result:${JSON.stringify(result)}`);
                                     return callback(null, result);
                                 }).catch((err) => {
+                                    log(`chunkEnd update fileData error:${err}`);
+                                    console.error('chunkEnd update fileData error', err);
                                     return callback(err);
                                 });
                             }).catch((err) => {
+                                log(`chunkEnd insert chunk error:${err}`);
+                                console.error('chunkEnd insert chunk error', err);
                                 return callback(err);
                             });
                         });
 
-                        chunker.on('data', (chunk) => {
+                        chunker.pipe(pipListener).on('data', (chunk) => {
                             buffer = Buffer.concat([buffer, chunk.data]);
                         });
 
@@ -222,20 +264,24 @@ export class MongoGridFSStore extends DataStore {
                             });
                         });
 
-                        chunker.on('error', (e) => {
-                            console.warn(e);
+                        chunker.on('error', (error) => {
+                            log(`write chunker error: ${JSON.stringify(error)}`);
+                            console.error(error);
                             reject(ERRORS.FILE_WRITE_ERROR);
                         });
                     }).catch((error) => {
-                        console.warn('[MongoGridFSStore] write', error);
+                        log(`write find file Chunk error: ${JSON.stringify(error)}`);
+                        console.error('[MongoGridFSStore] write', error);
                         return reject(ERRORS.FILE_WRITE_ERROR);
                     });
                 }).catch((error) => {
-                    console.warn('[MongoGridFSStore] write', error);
+                    log(`write find file info error: ${JSON.stringify(error)}`);
+                    console.error('[MongoGridFSStore] write', error);
                     return reject(ERRORS.FILE_WRITE_ERROR);
                 });
             }).catch((error) => {
-                console.warn('[MongoGridFSStore] write', error);
+                log(`write db error: ${JSON.stringify(error)}`);
+                console.error('[MongoGridFSStore] write', error);
                 return reject(ERRORS.FILE_WRITE_ERROR);
             });
         });
@@ -286,7 +332,7 @@ export class MongoGridFSStore extends DataStore {
 
                     return resolve(data);
                 }).catch((error) => {
-                    console.warn('[MongoGridFSStore] getFileMetadata', error);
+                    console.error('[MongoGridFSStore] getFileMetadata', error);
                     return reject(error);
                 });
             });
