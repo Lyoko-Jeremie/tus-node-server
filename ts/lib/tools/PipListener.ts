@@ -2,7 +2,7 @@ import {Transform} from 'stream';
 import * as moment from 'moment';
 import {bufferTime, map, filter} from 'rxjs/operators';
 import {Observable, Subject} from 'rxjs';
-import {isNumber, isNil, isBoolean, isArray} from 'lodash';
+import {isNumber, isNil, isBoolean, isArray, isFunction} from 'lodash';
 
 export interface PipListenerObservData {
     percentage: number;
@@ -20,6 +20,8 @@ export interface PipListenerConfig {
     speedSmoothRate?: number;
     dontSendProgressDuringNoData?: boolean;
     dontBufferByTime?: boolean;
+    isObjectMode?: boolean;
+    chunkSizeCounter?: ((chunk: any) => number);
 }
 
 export class PipListener extends Transform {
@@ -35,7 +37,10 @@ export class PipListener extends Transform {
     protected dontBufferByTime: boolean = false;
 
     constructor(max: number, beginOffset?: number, config?: PipListenerConfig) {
-        super();
+        super({
+            readableObjectMode: (!!config.isObjectMode) || false,
+            writableObjectMode: (!!config.isObjectMode) || false,
+        });
         this.max = max;
         this.count = beginOffset || 0;
         config = config || {};
@@ -52,6 +57,11 @@ export class PipListener extends Transform {
             this.lastSpeedSmoothRate = config.speedSmoothRate;
         } else if (isNumber(config.speedSmoothRate)) {
             console.warn('PipListener speedSmoothRate must >=0 and <1. but now it\'s' + config.speedSmoothRate);
+        }
+        if (isFunction(config.chunkSizeCounter)) {
+            this.chunkSizeCounter = config.chunkSizeCounter;
+        } else if (!!config.isObjectMode) {
+            console.warn('PipListener chunkSizeCounter must isFunction when isObjectMode are true.');
         }
         this.once('error', err => this.subject.error(err));
         this.once('end', () => {
@@ -113,6 +123,9 @@ export class PipListener extends Transform {
 
     protected subject = new Subject<number>();
     protected observable: Observable<PipListenerObservData>;
+    protected chunkSizeCounter: ((chunk: any) => number) = (chunk: any) => {
+        return (chunk as ArrayBuffer).byteLength;
+    };
 
     public getLastState() {
         const thisCheck = this.lastCheck;
@@ -148,7 +161,7 @@ export class PipListener extends Transform {
             this.startTime = moment();
         }
         this.push(chunk);
-        this.count += (chunk as ArrayBuffer).byteLength;
+        this.count += this.chunkSizeCounter(chunk);
         // console.log({count: this.count, max: this.max});
         // console.log(this.count / this.max * 100, '%', this.count, this.max);
         this.subject.next(this.count);
