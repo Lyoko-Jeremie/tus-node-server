@@ -110,7 +110,7 @@ export class MongoGridFSStore extends DataStore {
                     length: 0,
                     chunkSize: this.chunk_size,
                     uploadDate: new Date(),
-                    filename: 'file',
+                    filename: 'file_' + file_id.toString(),
                     md5: md5.end(),
                     metadata: {
                         upload_length: file.upload_length,
@@ -236,6 +236,13 @@ export class MongoGridFSStore extends DataStore {
 
                         chunker.pipe(pipListener).on('data', (chunk) => {
                             buffer = Buffer.concat([buffer, chunk.data]);
+                        }).on('end', () => {
+                            log(`chunker end.~~`);
+
+                            // check the file is all complete and send the complete event
+                            if (parseInt(fileData.metadata.upload_length, 10) === new_offset) {
+                                this.emit(EVENTS.EVENT_UPLOAD_COMPLETE, {file: fileData});
+                            }
                         });
 
                         // If there is a starting chunk, write all of its data to the chunker
@@ -251,9 +258,6 @@ export class MongoGridFSStore extends DataStore {
                         });
 
                         req.on('end', () => {
-                            if (fileData.metadata.upload_length === new_offset) {
-                                this.emit(EVENTS.EVENT_UPLOAD_COMPLETE, {file: fileData});
-                            }
 
                             chunker.end((err) => {
                                 if (err) {
