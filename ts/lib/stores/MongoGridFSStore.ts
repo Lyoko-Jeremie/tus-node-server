@@ -53,7 +53,7 @@ export class MongoGridFSStore extends DataStore {
             throw new Error('MongoGridFSStore must be provided with a bucket name to store the files in within Mongo!');
         }
         this.bucket_name = options.bucket;
-        this.chunk_size = options.chunk_size || (1024 * 64);
+        this.chunk_size = options.chunk_size || (1024 * 255);
         this.pipListenerConfig = Object.assign({
             chunkSizeCounter: (chunk: any) => {
                 if (chunk && chunk.data) {
