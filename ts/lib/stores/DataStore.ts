@@ -10,14 +10,15 @@ import {File} from '../models/File';
 import {EventEmitter} from 'events';
 import {ERRORS, EVENTS} from '../constants';
 import * as debug from 'debug';
+import {IncomingHttpHeaders, IncomingMessage} from 'http';
 
 const log = debug('tus-node-server:stores');
 
-export type DataStoreOptType = { path: string, namingFunction?: Function, relativeLocation?: boolean };
+export type DataStoreOptType = { path: string, namingFunction?: ((req: IncomingHttpHeaders & IncomingMessage) => string), relativeLocation?: boolean };
 
 export class DataStore extends EventEmitter {
     path: string;
-    generateFileName;
+    generateFileName: ((req: IncomingHttpHeaders & IncomingMessage) => string);
     relativeLocation;
     _extensions;
 
@@ -57,7 +58,7 @@ export class DataStore extends EventEmitter {
      * @param  {object} req http.incomingMessage
      * @return {Promise}
      */
-    async create(req): Promise<File> {
+    async create(req: IncomingHttpHeaders & IncomingMessage): Promise<File> {
         const upload_length = req.headers['upload-length'];
         const upload_defer_length = req.headers['upload-defer-length'];
         const upload_metadata = req.headers['upload-metadata'];

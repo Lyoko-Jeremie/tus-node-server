@@ -13,7 +13,7 @@ export class PostHandler extends BaseHandler {
      * @param  {object} res http.ServerResponse
      * @return {function}
      */
-    send(req, res) {
+    send(req: IncomingHttpHeaders & IncomingMessage, res: ServerResponse) {
         return this.store.create(req)
             .then((File) => {
                 const url = this.store.relativeLocation ? `${req.baseUrl || ''}${this.store.path}/${File.id}` : `//${req.headers.host}${req.baseUrl || ''}${this.store.path}/${File.id}`;
