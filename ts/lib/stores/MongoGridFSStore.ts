@@ -100,6 +100,14 @@ export class MongoGridFSStore extends DataStore {
 
                 const file_id = new mongodb.ObjectID();
 
+                let file_Name = undefined;
+                try {
+                    file_Name = this.generateFileName(req);
+                } catch (generateError) {
+                    log('[FileStore] create: check your namingFunction. Error', generateError);
+                    return Promise.reject(ERRORS.FILE_WRITE_ERROR);
+                }
+
                 const file = new File(file_id.toString(), upload_length, upload_defer_length, upload_metadata);
 
                 const md5 = new SparkMD5();
@@ -109,7 +117,8 @@ export class MongoGridFSStore extends DataStore {
                     length: 0,
                     chunkSize: this.chunk_size,
                     uploadDate: new Date(),
-                    filename: 'file_' + file_id.toString(),
+                    // filename: 'file_' + file_id.toString(),
+                    filename: 'file_' + file_Name,
                     md5: md5.end(),
                     metadata: {
                         upload_length: file.upload_length,
