@@ -1,4 +1,4 @@
-import {ServerResponse, OutgoingHttpHeaders, IncomingHttpHeaders, IncomingMessage} from 'http'
+import {ServerResponse, OutgoingHttpHeaders, IncomingHttpHeaders, IncomingMessage} from 'http';
 import {BaseHandler} from './BaseHandler' ;
 import {ERRORS, EVENT_ENDPOINT_CREATED} from '../constants' ;
 import * as debug from 'debug' ;

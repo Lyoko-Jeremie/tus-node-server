@@ -2,10 +2,9 @@ import {DataStore, DataStoreOptType} from './DataStore';
 import {File} from '../models/File';
 import * as mongodb from 'mongodb';
 import {MongoClient, Db} from 'mongodb';
-// import * as chunkingStreams from 'chunking-streams';
 import * as SparkMD5 from 'spark-md5';
 import {ERRORS, EVENTS, TUS_RESUMABLE} from '../constants';
-import {PipListener, PipListenerConfig, PipListenerObservData} from "../tools/PipListener";
+import {PipListener, PipListenerConfig, PipListenerObservData} from '../tools/PipListener';
 import {SizeChunker} from '../tools/SizeChunker';
 import * as debug from 'debug';
 

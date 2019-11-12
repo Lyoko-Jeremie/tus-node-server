@@ -72,7 +72,7 @@ export class RequestValidator {
     }
 
     static capitalizeHeader(header_name) {
-        return header_name.replace(/\b[a-z]/g, function () {
+        return header_name.replace(/\b[a-z]/g, function() {
             return arguments[0].toUpperCase();
         }).replace(/-/g, '');
     }

@@ -24,7 +24,7 @@ export class SizeChunker extends Transform {
         this._flushTail = (options && options.flushTail) || false;
 
         if (isNaN(this._chunkSize) || this._chunkSize <= 0) {
-            throw new Error("Invalid chunk size. Must be a number greater than zero.");
+            throw new Error('Invalid chunk size. Must be a number greater than zero.');
         }
 
         // use _final replace this
@@ -56,7 +56,7 @@ export class SizeChunker extends Transform {
     _startChunk(done) {
         this._currentChunk++;
         if (this.listenerCount('chunkStart') > 0) {
-            this.emit('chunkStart', this._currentChunk, done)
+            this.emit('chunkStart', this._currentChunk, done);
         } else {
             done();
         }
@@ -76,7 +76,7 @@ export class SizeChunker extends Transform {
             this._startChunk(() => {
                 this._lastEmittedChunk = this._currentChunk;
                 this._pushData(buf);
-            })
+            });
         } else {
             this._pushData(buf);
         }

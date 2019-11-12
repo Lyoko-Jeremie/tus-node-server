@@ -4,7 +4,7 @@ import * as fs from 'fs' ;
 import * as ConfigStore from 'configstore';
 import {ERRORS, EVENTS} from '../constants';
 import * as debug from 'debug';
-import {PipListener, PipListenerConfig, PipListenerObservData} from "../tools/PipListener";
+import {PipListener, PipListenerConfig, PipListenerObservData} from '../tools/PipListener';
 
 const pkg = require('../../../package.json');
 const MASK = '0777';
@@ -80,7 +80,7 @@ export class FileStore extends DataStore {
 
         const file = new File(file_id, upload_length, upload_defer_length, upload_metadata);
 
-        const fh = await fs.promises.open(`${this.directory}/${file.id}`, 'w')
+        const fh = await fs.promises.open(`${this.directory}/${file.id}`, 'w');
 
         try {
             this.configStore.set(file.id, file);
