@@ -20,6 +20,22 @@ import {BaseFilter} from './filter/BaseFilter';
 
 const log = debug('tus-node-server');
 
+export interface TusServerOpt {
+    /**
+     * if true, disable the builtin CORS control function,
+     * in this case, you MUST need set the CORS correctly by yourself.
+     *
+     * you must set the "Access-Control-Expose-Headers" as ```constants.EXPOSED_HEADERS``` ,
+     * otherwise the Tus protocol will not work.
+     *
+     * recommend use the (expressjs/cors)[https://github.com/expressjs/cors] package to set it if you use express.
+     *
+     * REMEMBER !!! DONT FORGOT TO SET THE "Access-Control-Expose-Headers" or "exposedHeaders" on cors .
+     *
+     */
+    disableBuiltinCors?: boolean;
+}
+
 export class TusServer extends EventEmitter {
 
     handlers: {
@@ -36,8 +52,9 @@ export class TusServer extends EventEmitter {
     };
     _datastore: DataStore;
     public filter: BaseFilter;
+    options: TusServerOpt;
 
-    constructor() {
+    constructor(options?: TusServerOpt) {
         super();
 
         // Any handlers assigned to this object with the method as the key
@@ -46,6 +63,8 @@ export class TusServer extends EventEmitter {
         this.handlers = {} as any;
 
         this.filter = new BaseFilter();
+
+        this.options = options || {};
 
         // Remove any event listeners from each handler as they are removed
         // from the server. This must come before adding a 'newListener' listener,
@@ -223,10 +242,12 @@ export class TusServer extends EventEmitter {
             return res;
         }
 
-        // Enable CORS
-        res.setHeader('Access-Control-Expose-Headers', EXPOSED_HEADERS);
-        if (req.headers.origin) {
-            res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
+        if (!this.options.disableBuiltinCors) {
+            // Enable CORS by default
+            res.setHeader('Access-Control-Expose-Headers', EXPOSED_HEADERS);
+            if (req.headers.origin) {
+                res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
+            }
         }
 
         // Invoke the handler for the method requested
