@@ -15,6 +15,8 @@ import {PostHandler} from './handlers/PostHandler';
 import {RequestValidator} from './validators/RequestValidator';
 import {EXPOSED_HEADERS, REQUEST_METHODS, TUS_RESUMABLE} from './constants';
 import * as debug from 'debug';
+import {IncomingHttpHeaders, IncomingMessage, ServerResponse} from 'http';
+import {BaseFilter} from './filter/BaseFilter';
 
 const log = debug('tus-node-server');
 
@@ -33,6 +35,7 @@ export class TusServer extends EventEmitter {
         POST: PostHandler,
     };
     _datastore: DataStore;
+    public filter: BaseFilter;
 
     constructor() {
         super();
@@ -41,6 +44,8 @@ export class TusServer extends EventEmitter {
         // will be used to repond to those requests. They get set/re-set
         // when a datastore is assigned to the server.
         this.handlers = {} as any;
+
+        this.filter = new BaseFilter();
 
         // Remove any event listeners from each handler as they are removed
         // from the server. This must come before adding a 'newListener' listener,
@@ -112,32 +117,68 @@ export class TusServer extends EventEmitter {
         this.handlers.GET[path] = callback;
     }
 
+    protected async _checkFilter(op: 'all' | 'get' | 'patch' | 'post' | 'head' | 'options' | string, req: IncomingHttpHeaders & IncomingMessage, res: ServerResponse) {
+        op = op.toLowerCase();
+        if (['all', 'get', 'patch', 'post', 'head', 'options'].find(T => T === op)) {
+            if (!await this.filter[op](req, res).catch(E => {
+                log(`[TusServer] handle "${op}" filter error: ${E}`);
+                console.error(`[TusServer] handle "${op}" filter error:`, E);
+                return false;
+            })) {
+                log(`[TusServer] handle "${op}" filter deny on: ${req.method} ${req.url} ,headers: ${JSON.stringify(req.headers)}`);
+                res.end();
+                return false;
+            }
+        }
+        return true;
+    }
+
     /**
      * Main server requestListener, invoked on every 'request' event.
      *
      * @param  {object} req http.incomingMessage
      * @param  {object} res http.ServerResponse
+     * @param next nextFunction, work for express and promise
      * @return {ServerResponse}
      */
-    handle(req, res) {
+    handle(req: IncomingHttpHeaders & IncomingMessage, res: ServerResponse, next?: ((err?: any) => void)): Promise<ServerResponse | void> {
+        return this._handle(req, res).then(T => {
+            // not need to call next , because this are processed
+            // next();
+            return T;
+        }).catch(E => {
+            next(E);
+            // return Promise.reject(E);
+        });
+    }
+
+    async _handle(req: IncomingHttpHeaders & IncomingMessage, res: ServerResponse): Promise<ServerResponse> {
         log(`[TusServer] handle: ${req.method} ${req.url} ,headers: ${JSON.stringify(req.headers)}`);
 
         // Allow overriding the HTTP method. The reason for this is
         // that some libraries/environments to not support PATCH and
         // DELETE requests, e.g. Flash in a browser and parts of Java
-        if (req.headers['x-http-method-override']) {
-            req.method = req.headers['x-http-method-override'].toUpperCase();
+        if (req.headers['x-http-method-override'] && req.headers['x-http-method-override'] instanceof String) {
+            req.method = (req.headers['x-http-method-override'] as string).toUpperCase();
         }
 
+        if (!await this._checkFilter('all', req, res)) {
+            return res;
+        }
 
         if (req.method === 'GET') {
+
+            if (!await this._checkFilter('get', req, res)) {
+                return res;
+            }
 
             // Check if this url has been added to allow GET requests, with an
             // appropriate callback to handle the request
             if (!(req.url in this.handlers.GET)) {
                 res.writeHead(404, {});
                 res.write('Not found\n');
-                return res.end();
+                res.end();
+                return res;
             }
 
             // invoke the callback
@@ -149,8 +190,9 @@ export class TusServer extends EventEmitter {
         // of the protocol used by the Client or the Server.
         res.setHeader('Tus-Resumable', TUS_RESUMABLE);
         if (req.method !== 'OPTIONS' && req.headers['tus-resumable'] === undefined) {
-            res.writeHead(412, {}, 'Precondition Failed');
-            return res.end('Tus-Resumable Required\n');
+            res.writeHead(412, 'Precondition Failed');
+            res.end('Tus-Resumable Required\n');
+            return res;
         }
 
         // Validate all required headers to adhere to the tus protocol
@@ -176,8 +218,9 @@ export class TusServer extends EventEmitter {
 
         if (invalid_headers.length > 0) {
             // The request was not configured to the tus protocol
-            res.writeHead(412, {}, 'Precondition Failed');
-            return res.end(`Invalid ${invalid_headers.join(' ')}\n`);
+            res.writeHead(412, 'Precondition Failed');
+            res.end(`Invalid ${invalid_headers.join(' ')}\n`);
+            return res;
         }
 
         // Enable CORS
@@ -188,13 +231,19 @@ export class TusServer extends EventEmitter {
 
         // Invoke the handler for the method requested
         if (this.handlers[req.method]) {
+
+            if (!await this._checkFilter(req.method, req, res)) {
+                return res;
+            }
+
             return this.handlers[req.method].send(req, res);
         }
 
         // 404 Anything else
         res.writeHead(404, {});
         res.write('Not found\n');
-        return res.end();
+        res.end();
+        return res;
     }
 
     listen() {
