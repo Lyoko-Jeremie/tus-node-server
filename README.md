@@ -23,6 +23,18 @@ $ npm install tus-node-server
     });
     ```
 
+- **Mongodb GridFS Storage**
+    ```js
+
+    server.datastore = new tus.MongoGridFSStore({
+        path: '/files',
+        relativeLocation: true,
+        uri: 'mongodb://username:passwd@host:port',
+        db: 'databaseName',
+        bucket: 'bucketName',
+    });
+    ```
+
 - **Google Cloud Storage**
     ```js
 
