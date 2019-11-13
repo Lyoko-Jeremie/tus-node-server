@@ -38,8 +38,8 @@ export class PipListener extends Transform {
 
     constructor(max: number, beginOffset?: number, config?: PipListenerConfig) {
         super({
-            readableObjectMode: (!!config.isObjectMode) || false,
-            writableObjectMode: (!!config.isObjectMode) || false,
+            readableObjectMode: (config && !!config.isObjectMode) || false,
+            writableObjectMode: (config && !!config.isObjectMode) || false,
         });
         this.max = max;
         this.count = beginOffset || 0;
