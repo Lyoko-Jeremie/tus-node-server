@@ -5,5 +5,5 @@ export {GCSDataStore} from './lib/stores/GCSDataStore';
 export {S3Store} from './lib/stores/S3Store';
 export {MongoGridFSStore} from './lib/stores/MongoGridFSStore';
 
-export {ERRORS, EVENTS} from './lib/constants';
+export {ERRORS, EVENTS, EXPOSED_HEADERS, EXPOSED_HEADERS_LIST} from './lib/constants';
 

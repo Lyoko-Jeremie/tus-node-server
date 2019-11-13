@@ -74,6 +74,7 @@ export const EVENTS = {
 export const ALLOWED_HEADERS = HEADERS.join(', ');
 export const ALLOWED_METHODS = REQUEST_METHODS.join(', ');
 export const EXPOSED_HEADERS = HEADERS.join(', ');
+export const EXPOSED_HEADERS_LIST = HEADERS;
 export const MAX_AGE = 86400;
 export const TUS_RESUMABLE = '1.0.0';
 export const TUS_VERSION = ['1.0.0'];
