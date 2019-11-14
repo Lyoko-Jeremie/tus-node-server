@@ -13,7 +13,7 @@ import {OptionsHandler} from './handlers/OptionsHandler';
 import {PatchHandler} from './handlers/PatchHandler';
 import {PostHandler} from './handlers/PostHandler';
 import {RequestValidator} from './validators/RequestValidator';
-import {EXPOSED_HEADERS, REQUEST_METHODS, TUS_RESUMABLE} from './constants';
+import {ERRORS, EXPOSED_HEADERS, REQUEST_METHODS, TUS_RESUMABLE} from './constants';
 import * as debug from 'debug';
 import {IncomingHttpHeaders, IncomingMessage, ServerResponse} from 'http';
 import {BaseFilter} from './filter/BaseFilter';
@@ -142,6 +142,17 @@ export class TusServer extends EventEmitter {
             if (!await this.filter[op](req, res).catch(E => {
                 log(`[TusServer] handle "${op}" filter error: ${E}`);
                 console.error(`[TusServer] handle "${op}" filter error:`, E);
+
+                // res can write, res is not end()
+                // set error message to end it
+                if (!res.finished) {
+                    const status_code = E.status_code || ERRORS.FILTER_REJECT_ERROR.status_code;
+                    const body = E.body || `${ERRORS.FILTER_REJECT_ERROR.body} : ${E.message || ''}\n`;
+                    res.writeHead(status_code, {});
+                    res.write(body);
+                    res.end();
+                }
+
                 return false;
             })) {
                 log(`[TusServer] handle "${op}" filter deny on: ${req.method} ${req.url} ,headers: ${JSON.stringify(req.headers)}`);
