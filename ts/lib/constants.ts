@@ -56,6 +56,10 @@ export const ERRORS = {
         status_code: 500,
         body: 'Something went wrong receiving the file\n',
     },
+    FILTER_REJECT_ERROR: {
+        status_code: 403,
+        body: 'this operate is forbidden by filter.\n',
+    },
 };
 
 export const EVENT_ENDPOINT_CREATED = 'EVENT_ENDPOINT_CREATED';
