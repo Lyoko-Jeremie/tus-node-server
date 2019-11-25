@@ -6,6 +6,19 @@ export function getMetaData(req: IncomingHttpHeaders & IncomingMessage): Map<str
 
     const kp: Map<string, any> = getMetaDataNotDecode(req);
 
+    return decodeMetaData(kp);
+}
+
+export function getMetaDataNotDecode(req: IncomingHttpHeaders & IncomingMessage): Map<string, string | undefined> {
+    const value = req.headers['upload-metadata'] as string;
+
+    if (isString(value)) {
+        return splitMetaData(value);
+    }
+    return new Map<string, string | undefined>();
+}
+
+export function decodeMetaData(kp: Map<string, string | undefined | any>): Map<string, string | undefined> {
     kp.forEach((v, k) => {
         if (isString(v)) {
             if (v.length > 0) {
@@ -13,19 +26,15 @@ export function getMetaData(req: IncomingHttpHeaders & IncomingMessage): Map<str
             }
         }
     });
-
     return kp;
 }
 
-export function getMetaDataNotDecode(req: IncomingHttpHeaders & IncomingMessage): Map<string, string | undefined> {
-    const value = req.headers['upload-metadata'] as string;
-    const keyPairs = value.split(',')
-        .map((kp) => kp.trim().split(' '));
-
+export function splitMetaData(metadata: string): Map<string, string | undefined> {
     const kp = new Map<string, string | undefined>();
+    const keyPairs = metadata.split(',')
+        .map((kp) => kp.trim().split(' '));
     keyPairs.forEach(T => {
         kp.set(T[0], T.length > 1 ? T[1] : undefined);
     });
-
     return kp;
 }
