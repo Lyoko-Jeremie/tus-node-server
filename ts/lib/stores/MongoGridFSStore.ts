@@ -25,7 +25,7 @@ export interface GridFileType {
         upload_defer_length?: number | string,
         md5state?: any,
         fileInfo: File,
-    };
+    } & { [key: string]: any };
 }
 
 export interface MongoGridFSFilter {
