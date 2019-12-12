@@ -11,6 +11,15 @@ import {IncomingHttpHeaders, IncomingMessage} from 'http';
 
 const log = debug('tus-node-server:stores:MongoGridFSStore');
 
+export interface GridFileTypeMetadata {
+    upload_length?: number | string;
+    tus_version: string;
+    upload_metadata: string;
+    upload_defer_length?: number | string;
+    md5state?: any;
+    fileInfo: File;
+}
+
 export interface GridFileType {
     _id: mongodb.ObjectId;
     length: number;
@@ -18,14 +27,7 @@ export interface GridFileType {
     uploadDate: Date;
     filename: string;
     md5: string;
-    metadata: {
-        upload_length?: number | string,
-        tus_version: string,
-        upload_metadata: string,
-        upload_defer_length?: number | string,
-        md5state?: any,
-        fileInfo: File,
-    } & { [key: string]: any };
+    metadata: GridFileTypeMetadata & { [key: string]: any };
 }
 
 export interface MongoGridFSFilter {
