@@ -1,10 +1,10 @@
 {
-  "name": "tus-node-server",
-  "description": "Node.js tus server",
-  "version": "0.3.2",
+  "name": "tus-node-server-ts",
+  "description": "Node.js tus server By Typescript",
+  "version": "0.5.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tus/tus-node-server.git"
+    "url": "git+https://github.com/Lyoko-Jeremie/tus-node-server.git"
   },
   "keywords": [
     "tus",
@@ -15,14 +15,16 @@
     "app",
     "api",
     "server",
-    "typescrypt"
+    "typescrypt",
+    "GridFS",
+    "MongoDB"
   ],
-  "author": "Ben Stahl <bhstahl@gmail.com>",
+  "author": "Jeremie Lyoko <lucheng989898@protonmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/tus/tus-node-server/issues"
+    "url": "https://github.com/Lyoko-Jeremie/tus-node-server/issues"
   },
-  "homepage": "https://github.com/tus/tus-node-server#readme",
+  "homepage": "https://github.com/Lyoko-Jeremie/tus-node-server",
   "engines": {
     "node": ">=6.0"
   },
@@ -38,8 +40,7 @@
     "coverage": "nyc npm test && nyc report --reporter=text-lcov | coveralls",
     "demo": "node demo/server.js",
     "gcs_demo": "cross-env DATA_STORE=GCSDataStore node demo/server.js",
-    "lint": "eslint .",
-    "build:ts": "npx tsc --build ./ts/tsconfig.json"
+    "build": "npx tsc --build ./ts/tsconfig.json"
   },
   "devDependencies": {
     "@google-cloud/storage": "^2.4.2",
