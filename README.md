@@ -34,3 +34,42 @@ Please see [this](https://github.com/Lyoko-Jeremie/TestTus) .
 **Push Request always Welcome !**
 
 ---
+
+---
+
+## For developer
+
+if you want to dev and build this project in local.
+
+use follow code:
+```shell script
+call yarn install
+
+npm run build
+```
+
+and then use follow command to add this project as your project libs.
+
+- **npm**
+```shell script
+npm install --save ../tus-node-server
+```
+
+- **yarn**
+```shell script
+yarn add ./../tus-node-server
+```
+
+and update it if you modified something and re-build it use ```npm run build```
+
+- **npm**
+```shell script
+npm update ../tus-node-server
+```
+
+- **yarn**
+```shell script
+yarn upgrade ./../tus-node-server
+```
+
+see [stackoverflow : how-to-specify-local-modules-as-npm-package-dependencies](https://stackoverflow.com/questions/15806241/how-to-specify-local-modules-as-npm-package-dependencies)
