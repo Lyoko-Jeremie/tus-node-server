@@ -20,7 +20,7 @@
     "MongoDB"
   ],
   "author": "Jeremie Lyoko <lucheng989898@protonmail.com>",
-  "license": "MIT or LGPLv3",
+  "license": "(MIT OR GPL-3.0)",
   "bugs": {
     "url": "https://github.com/Lyoko-Jeremie/tus-node-server/issues"
   },
