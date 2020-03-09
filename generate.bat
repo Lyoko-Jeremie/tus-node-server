@@ -1,5 +1,5 @@
 call yarn install
 
-npm run build:ts
+npm run build
 
 pause
