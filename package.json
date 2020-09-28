@@ -1,7 +1,7 @@
 {
   "name": "tus-node-server-ts",
   "description": "Node.js tus server By Typescript",
-  "version": "0.5.4",
+  "version": "0.5.5",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Lyoko-Jeremie/tus-node-server.git"

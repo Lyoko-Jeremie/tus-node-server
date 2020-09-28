@@ -32,7 +32,7 @@ export interface GridFileType {
 
 export interface MongoGridFSFilter {
     beforeCreate?: ((req: IncomingHttpHeaders & IncomingMessage, file: File, grid_file: GridFileType) => Promise<boolean>);
-    afterCreate?: ((req: IncomingHttpHeaders & IncomingMessage, file: File, grid_file: GridFileType, result: mongodb.InsertOneWriteOpResult<any>) => Promise<any>);
+    afterCreate?: ((req: IncomingHttpHeaders & IncomingMessage, file: File, grid_file: GridFileType, result: mongodb.InsertOneWriteOpResult<GridFileType>) => Promise<any>);
     beforeWrite?: ((req: IncomingHttpHeaders & IncomingMessage, file: File, grid_file: GridFileType) => Promise<boolean>);
     afterWrite?: ((req: IncomingHttpHeaders & IncomingMessage, file: File, grid_file: GridFileType) => Promise<any>);
 }
@@ -164,7 +164,7 @@ export class MongoGridFSStore extends DataStore {
             }
         }
 
-        const files = db.collection(`${this.bucket_name}.files`);
+        const files = db.collection<GridFileType>(`${this.bucket_name}.files`);
         try {
             const _result = await files.insertOne(grid_file);
             this.emit(EVENTS.EVENT_FILE_CREATED, {file});
